@@ -224,7 +224,9 @@ class BaseChargebeeStream(BaseStream):
 
             records = response.get('list')
 
+            LOGGER.info("Building stream data")
             to_write = self.get_stream_data(records)
+            LOGGER.info("Built stream data")
 
             if self.ENTITY == 'event':
                 for event in to_write:

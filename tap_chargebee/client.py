@@ -67,6 +67,8 @@ class ChargebeeClient(BaseClient):
             params=self.get_params(params),
             json=body)
 
+        LOGGER.info(f"Processing response {response.status_code}")
+
         if response.status_code == 429:
             if not "Retry-After" in  response.headers:
                 LOGGER.info("Status code 429 was raised without Retry-After")
