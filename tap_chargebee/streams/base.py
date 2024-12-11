@@ -153,6 +153,7 @@ class BaseChargebeeStream(BaseStream):
         entity = self.ENTITY
         return [self.transform_record(item.get(entity)) for item in data]
 
+
     def sync_data(self):
         table = self.TABLE
         api_method = self.API_METHOD
@@ -208,7 +209,7 @@ class BaseChargebeeStream(BaseStream):
                 params[field_name] = field_value
                 LOGGER.info("Querying filtering by {}={}".format(field_name, field_value))
                 
-        ids = []
+        ids = set()
         while not done:
             max_date = bookmark_date
 
@@ -224,9 +225,7 @@ class BaseChargebeeStream(BaseStream):
 
             records = response.get('list')
 
-            LOGGER.info("Building stream data")
             to_write = self.get_stream_data(records)
-            LOGGER.info("Built stream data")
 
             if self.ENTITY == 'event':
                 for event in to_write:
@@ -248,7 +247,7 @@ class BaseChargebeeStream(BaseStream):
             if self.ENTITY == 'transaction':
                 # store ids to clean dupplicates
                 to_write = [record for record in to_write if record["id"] not in ids]
-                ids.extend([trans["id"] for trans in to_write])
+                ids.update([trans["id"] for trans in to_write])
 
             with singer.metrics.record_counter(endpoint=table) as ctr:
                 singer.write_records(table, to_write)
@@ -269,6 +268,7 @@ class BaseChargebeeStream(BaseStream):
                                         max_date,
                                         datetime.fromtimestamp(item.get(bookmark_key), tz=dtz.gettz('UTC')
                                     ))
+
 
             if bookmark_key is not None:
                 self.state = incorporate(
@@ -328,7 +328,7 @@ class BaseChargebeeStream(BaseStream):
 
         LOGGER.info("Querying {} starting at {}".format(table, bookmark_date))
 
-        ids = []
+        ids = set()
         while not done:
             try:
                 response = self.client.make_request(
@@ -344,7 +344,7 @@ class BaseChargebeeStream(BaseStream):
                 # clean duplicate values for transactions
                 if self.ENTITY == 'transaction':
                     if record["id"] not in ids:
-                        ids.append(record["id"])
+                        ids.add(record["id"])
                     else:
                         continue
                 yield record
