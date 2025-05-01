@@ -1,12 +1,10 @@
 name: Smoke Test
 
-
 on:
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
-    inputs:
-      description: 'Run smoke tests manually'
+    description: 'Run smoke tests manually'
 
 jobs:
   smoke-test:
